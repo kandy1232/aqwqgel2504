@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Aqwagel Product Manager</title>
+<meta name="description" content="Aqwagel admin panel for managing educational maps, posters, and products. Password protected.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="style.css">
+<script src="contact.js" defer></script>
+<style>
+.image-preview{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;background:var(--blue-light);margin-top:8px;display:none}
+.image-preview.show{display:block}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
+.tab-bar{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--border);flex-wrap:wrap}
+.tab-btn{padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;font-weight:600;color:var(--text-light);font-size:.85rem;transition:all .2s}
+.tab-btn.active{border-bottom-color:var(--blue);color:var(--blue)}
+.tab-btn:hover{color:var(--blue-dark)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.admin-contact-bar{background:var(--blue-light);padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;font-size:.82rem;color:var(--text-light)}
+.admin-contact-bar a{color:var(--blue);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="admin-login" id="login-screen">
+  <div class="login-box">
+    <picture>
+      <source srcset="logo.webp" type="image/webp">
+      <img src="logo.png" alt="Aqwagel Logo" style="height:48px;width:auto;border-radius:6px;margin-bottom:12px">
+    </picture>
+    <h2>Aqwagel Admin</h2>
+    <p>Enter password to manage products</p>
+    <input type="password" id="admin-password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" onclick="doLogin()">Sign In</button>
+    <p id="login-error" style="color:#c62828;font-size:.8rem;margin-top:12px;display:none">Incorrect password. Please try again.</p>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-panel" id="admin-panel">
+  <div class="admin-contact-bar">
+    <span>📍 <strong data-contact="address">No 17, Wikramasinghepura, Battaramulla, Sri Lanka</strong></span>
+    <span>📞 <a data-contact="phone" href="tel:+94717299504">+94 71 729 9504</a></span>
+    <span>✉️ <a data-contact="email" href="mailto:hello@aqwagel.com">hello@aqwagel.com</a></span>
+    <span style="margin-left:auto;font-size:.75rem;color:var(--text-light)">Edit contact.js to change these details</span>
+  </div>
+
+  <div class="admin-header">
+    <h1>🛠️ Product Manager</h1>
+    <button class="btn" style="background:var(--blue);color:#fff" onclick="doLogout()">Logout</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('add')" id="tab-add">➕ Add Product</button>
+    <button class="tab-btn" onclick="showTab('manage')" id="tab-manage">📦 Manage Products</button>
+    <button class="tab-btn" onclick="showTab('giant')" id="tab-giant">🎨 Giant Coloring</button>
+  </div>
+
+  <!-- ADD PRODUCT TAB -->
+  <div class="tab-panel active" id="panel-add">
+    <div class="admin-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="prod-name">Product Name</label>
+          <input type="text" id="prod-name" placeholder="e.g. World Map Poster">
+        </div>
+        <div class="form-group">
+          <label for="prod-category">Category</label>
+          <select id="prod-category">
+            <option value="stationeries">Aqwagel Stationeries</option>
+            <option value="maps">World & Sri Lanka Maps</option>
+            <option value="animals">Animals & Insects</option>
+            <option value="solar">Solar System & Planets</option>
+            <option value="human">Human Body & Parts</option>
+            <option value="science">Science & Nature</option>
+            <option value="languages">Languages & Literacy</option>
+            <option value="history">History & Culture</option>
+            <option value="math">Math Charts</option>
+            <option value="alphabet">Alphabet & Numbers</option>
+            <option value="srilanka">Sri Lanka Specific</option>
+            <option value="others">Others</option>
+            <option value="giant">Giant Coloring Posters</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label for="prod-desc">Description</label>
+          <textarea id="prod-desc" placeholder="Short description..." oninput="updateWordCounter()"></textarea>
+          <div class="word-counter" id="word-counter">0 words</div>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label for="prod-image">Image (URL or upload)</label>
+          <input type="text" id="prod-image" placeholder="https://... or paste base64" oninput="previewImage()">
+          <input type="file" id="prod-file" accept="image/*" style="margin-top:8px;font-size:.8rem" onchange="handleFileUpload()">
+          <img id="image-preview" class="image-preview" alt="Preview">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="prod-alt">Image Alt Text (SEO)</label>
+          <input type="text" id="prod-alt" placeholder="Aqwagel product description for SEO">
+        </div>
+      </div>
+      <button class="btn" style="margin-top:8px" onclick="addProduct()">Add Product</button>
+    </div>
+  </div>
+
+  <!-- MANAGE PRODUCTS TAB -->
+  <div class="tab-panel" id="panel-manage">
+    <div class="admin-products" id="admin-products-list"></div>
+  </div>
+
+  <!-- GIANT COLORING TAB -->
+  <div class="tab-panel" id="panel-giant">
+    <div class="admin-products" id="admin-giant-list"></div>
+  </div>
+
+  <div class="save-indicator" id="save-indicator">💾 Saved to localStorage</div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = 'aqwagel2026';
+const STORAGE_KEY = 'aqwagel_products';
+let editingId = null;
+
+if(localStorage.getItem('aqwagel_admin')==='1'){
+  showPanel();
+}
+
+function doLogin(){
+  const input = document.getElementById('admin-password').value;
+  if(input === ADMIN_PASSWORD){
+    localStorage.setItem('aqwagel_admin','1');
+    showPanel();
+  } else {
+    document.getElementById('login-error').style.display='block';
+  }
+}
+
+function doLogout(){
+  localStorage.removeItem('aqwagel_admin');
+  location.reload();
+}
+
+function showPanel(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('admin-panel').style.display='block';
+  renderAdminProducts();
+  renderGiantProducts();
+}
+
+function showTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+  if(tab==='manage') renderAdminProducts();
+  if(tab==='giant') renderGiantProducts();
+}
+
+function updateWordCounter(){
+  const text = document.getElementById('prod-desc').value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  const counter = document.getElementById('word-counter');
+  counter.textContent = words + ' words';
+  counter.className = 'word-counter';
+}
+
+function previewImage(){
+  const url = document.getElementById('prod-image').value;
+  const img = document.getElementById('image-preview');
+  if(url){
+    img.src = url;
+    img.classList.add('show');
+  } else {
+    img.classList.remove('show');
+  }
+}
+
+function handleFileUpload(){
+  const file = document.getElementById('prod-file').files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    document.getElementById('prod-image').value = e.target.result;
+    previewImage();
+  };
+  reader.readAsDataURL(file);
+}
+
+function getProducts(){
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+}
+
+function saveProducts(products){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+  showSaveIndicator();
+}
+
+function showSaveIndicator(){
+  const el = document.getElementById('save-indicator');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2000);
+}
+
+function addProduct(){
+  const name = document.getElementById('prod-name').value.trim();
+  const category = document.getElementById('prod-category').value;
+  const description = document.getElementById('prod-desc').value.trim();
+  const image = document.getElementById('prod-image').value.trim();
+  const alt = document.getElementById('prod-alt').value.trim();
+
+  if(!name || !description || !image){
+    alert('Please fill in product name, description, and image.');
+    return;
+  }
+
+  const products = getProducts();
+  const newProduct = {
+    id: editingId || 'p' + Date.now(),
+    name,
+    category,
+    description,
+    image,
+    alt: alt || name
+  };
+
+  if(editingId){
+    const idx = products.findIndex(p=>p.id===editingId);
+    if(idx>-1) products[idx] = newProduct;
+    editingId = null;
+  } else {
+    products.push(newProduct);
+  }
+
+  saveProducts(products);
+
+  document.getElementById('prod-name').value='';
+  document.getElementById('prod-desc').value='';
+  document.getElementById('prod-image').value='';
+  document.getElementById('prod-alt').value='';
+  document.getElementById('prod-file').value='';
+  document.getElementById('image-preview').classList.remove('show');
+  updateWordCounter();
+
+  renderAdminProducts();
+  renderGiantProducts();
+  alert(editingId ? 'Product updated!' : 'Product added!');
+}
+
+function deleteProduct(id){
+  if(!confirm('Delete this product?')) return;
+  let products = getProducts().filter(p=>p.id!==id);
+  saveProducts(products);
+  renderAdminProducts();
+  renderGiantProducts();
+}
+
+function editProduct(id){
+  const product = getProducts().find(p=>p.id===id);
+  if(!product) return;
+  editingId = id;
+  document.getElementById('prod-name').value = product.name;
+  document.getElementById('prod-category').value = product.category;
+  document.getElementById('prod-desc').value = product.description;
+  document.getElementById('prod-image').value = product.image;
+  document.getElementById('prod-alt').value = product.alt || '';
+  previewImage();
+  updateWordCounter();
+  showTab('add');
+  document.getElementById('prod-name').focus();
+}
+
+function renderAdminProducts(){
+  const container = document.getElementById('admin-products-list');
+  const products = getProducts().filter(p=>p.category!=='giant');
+  if(products.length===0){
+    container.innerHTML = '<div class="empty-state"><p>No products yet. Add your first product above.</p></div>';
+    return;
+  }
+  container.innerHTML = products.map(p=>`
+    <div class="admin-product">
+      <img src="${p.image}" alt="${p.alt||p.name}" loading="lazy">
+      <div class="admin-product-info">
+        <span class="cat-badge">${p.category}</span>
+        <h4>${p.name}</h4>
+        <p>${p.description}</p>
+        <div class="admin-actions">
+          <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
+          <button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderGiantProducts(){
+  const container = document.getElementById('admin-giant-list');
+  const products = getProducts().filter(p=>p.category==='giant');
+  if(products.length===0){
+    container.innerHTML = '<div class="empty-state"><p>No giant coloring posters yet. Add one using the Add Product tab and select "Giant Coloring Posters" category.</p></div>';
+    return;
+  }
+  container.innerHTML = products.map(p=>`
+    <div class="admin-product">
+      <img src="${p.image}" alt="${p.alt||p.name}" loading="lazy">
+      <div class="admin-product-info">
+        <span class="cat-badge" style="background:#fff3e0;color:#e65100">Giant Coloring</span>
+        <h4>${p.name}</h4>
+        <p>${p.description}</p>
+        <div class="admin-actions">
+          <button class="btn-edit" onclick="editProduct('${p.id}')">Edit</button>
+          <button class="btn-delete" onclick="deleteProduct('${p.id}')">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function seedDefaults(){
+  if(localStorage.getItem(STORAGE_KEY)) return;
+  const defaults=[
+    {id:'p1',name:'World Map Poster',description:'Detailed political world map with country names, capitals, and flags for classroom learning. Suitable for all ages from Montessori to University.',category:'maps',image:'https://placehold.co/400x300/e3f2fd/1565c0?text=World+Map',alt:'Aqwagel world map poster Sri Lanka for school'},
+    {id:'p2',name:'Sri Lanka Map',description:'Colorful Sri Lanka map showing districts, major cities, rivers, and landmarks for students. Perfect for Montessori to University education.',category:'maps',image:'https://placehold.co/400x300/e8f5e9/2e7d32?text=Sri+Lanka+Map',alt:'Aqwagel Sri Lanka map poster for school children'},
+    {id:'p3',name:'Solar System Poster',description:'Vibrant solar system chart with all planets, their orbits, and fun facts for young astronomers. Engaging for all grade levels.',category:'solar',image:'https://placehold.co/400x300/fff3e0/e65100?text=Solar+System',alt:'Aqwagel solar system poster planets for kids Sri Lanka'},
+    {id:'p4',name:'Human Body Chart',description:'Educational human body diagram showing organs, bones, and body systems for school biology. From primary school to university level.',category:'human',image:'https://placehold.co/400x300/fce4ec/c62828?text=Human+Body',alt:'Aqwagel human body poster parts anatomy for children Sri Lanka'},
+    {id:'p5',name:'Giant World Map Coloring',description:'Extra-large world map coloring poster for group classroom activities and creative learning. Fun for all ages from Montessori to University.',category:'giant',image:'https://placehold.co/400x300/ffe0b2/ef6c00?text=Giant+Coloring',alt:'Aqwagel giant coloring poster for kids creative activity Sri Lanka'},
+    {id:'p6',name:'Animal Kingdom Poster',description:'Beautiful animal poster featuring mammals, birds, reptiles, and marine life for nature education. Suitable for all ages.',category:'animals',image:'https://placehold.co/400x300/f3e5f5/7b1fa2?text=Animals',alt:'Aqwagel animal kingdom poster for children Sri Lanka'},
+    {id:'p7',name:'Insects of the World',description:'Detailed insect chart showing butterflies, beetles, ants, and bees with labeled body parts. Great for Montessori to University.',category:'animals',image:'https://placehold.co/400x300/e0f2f1/00695c?text=Insects',alt:'Aqwagel insects of the world poster for school Sri Lanka'},
+    {id:'p8',name:'Educational Stationery Set',description:'Complete stationery set with rulers, pencils, and erasers featuring educational designs. Perfect for all students.',category:'stationeries',image:'https://placehold.co/400x300/eceff1/455a64?text=Stationery',alt:'Aqwagel educational stationery set for Sri Lankan students'},
+    {id:'p9',name:'Periodic Table Poster',description:'Colorful periodic table of elements with atomic numbers, symbols, and categories for chemistry class. Suitable for all ages.',category:'science',image:'https://placehold.co/400x300/e8eaf6/3f51b5?text=Periodic+Table',alt:'Aqwagel periodic table poster Sri Lanka school science'},
+    {id:'p10',name:'Sinhala Alphabet Chart',description:'Complete Sinhala alphabet chart with vowels, consonants, and example words for Grade 1 students. Montessori to University.',category:'alphabet',image:'https://placehold.co/400x300/fff8e1/ffc107?text=Sinhala+ABC',alt:'Aqwagel Sinhala alphabet chart Grade 1 Sri Lanka'},
+    {id:'p11',name:'Multiplication Table Chart',description:'1 to 12 multiplication table chart with color-coded rows for easy memorization by Sri Lankan students. All ages.',category:'math',image:'https://placehold.co/400x300/e0f7fa/00bcd4?text=Math+Tables',alt:'Aqwagel multiplication table chart Sri Lanka students'},
+    {id:'p12',name:'Sri Lanka National Symbols',description:'Educational poster featuring Sri Lanka national flag, anthem, flower, bird, tree, and animal with descriptions.',category:'srilanka',image:'https://placehold.co/400x300/fbe9e7/d84315?text=SL+Symbols',alt:'Aqwagel Sri Lanka national symbols poster for schools'},
+    {id:'p13',name:'English Phonics Poster',description:'Complete English phonics sounds chart with letter blends, digraphs, and example words for early readers. All ages.',category:'languages',image:'https://placehold.co/400x300/f3e5f5/9c27b0?text=Phonics',alt:'Aqwagel English phonics poster preschool Sri Lanka'},
+    {id:'p14',name:'Ancient Sri Lanka Timeline',description:'Historical timeline of ancient Sri Lanka from Vijaya to Kandyan kingdom for school history projects. All levels.',category:'history',image:'https://placehold.co/400x300/efebe9/795548?text=History',alt:'Aqwagel ancient Sri Lanka timeline poster school project'}
+  ];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
+}
+
+seedDefaults();
+</script>
+</body>
+</html>
